@@ -77,6 +77,11 @@ proxyfile *search_proxyfile(proxyfile_list *list, char *file_path) {
     return NULL;
 }
 
+/**
+ * delete_proxyfile - remove a proxyfile from the proxyfile_list
+ * @list: the proxyfile_list
+ * @pf:   the proxyfile
+ */
 void delete_proxyfile(proxyfile_list *list, proxyfile *pf) {
     if(pf->prev)
         ((proxyfile *)pf->prev)->next = pf->next;

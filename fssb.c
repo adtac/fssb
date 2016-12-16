@@ -222,7 +222,7 @@ int main(int argc, char **argv) {
 
     if(cleanup)
         rmdir(SANDBOX_DIR);
-    else if(print_map)
+    else if(print_list)
         print_map(list, log_file);
 
     return 0;

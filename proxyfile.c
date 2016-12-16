@@ -24,6 +24,12 @@
 #include "proxyfile.h"
 #include "utils.h"
 
+/**
+ * new_proxyfile_list - creates a new proxyfile list
+ *
+ * Returns a (proxyfile_list *) pointer pointing to the newly created
+ * proxyfile_list object.
+ */
 proxyfile_list *new_proxyfile_list()
 {
     proxyfile_list *retval = (proxyfile_list *)malloc(sizeof(proxyfile_list));

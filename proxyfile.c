@@ -37,16 +37,17 @@ proxyfile_list *new_proxyfile_list()
 
 proxyfile *new_proxyfile(proxyfile_list *list, char *file_path)
 {
-    if(list->head == NULL) { /* first proxyfile */
+    if(list->tail == NULL) { /* first proxyfile */
         list->head = (proxyfile *)malloc(sizeof(proxyfile));
         list->tail = list->head;
         list->tail->next = NULL;
-        list->used = 1;
+        list->tail->prev = NULL;
     }
     else { /* append to existing linked list */
-        list->tail->next = (proxyfile *)malloc(sizeof(proxyfile));
-        list->tail = list->tail->next;
-        list->used++;
+        proxyfile *next = (proxyfile *)malloc(sizeof(proxyfile));
+        next->prev = list->tail;
+        next->next = NULL;
+        list->tail = next;
     }
 
     proxyfile *cur = list->tail;

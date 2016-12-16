@@ -23,7 +23,7 @@
 #include <stdio.h>
 
 typedef struct {
-    void *next;
+    void *next, *prev;
     char *file_path, *md5, *proxy_path;
     int fd;
 } proxyfile;

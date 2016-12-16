@@ -118,6 +118,14 @@ void delete_proxyfile(proxyfile_list *list, proxyfile *pf) {
     free(pf);
 }
 
+/**
+ * print_map - print the internal file map
+ * @list:     the proxyfile_list
+ * @log_file: a (FILE *) pointer to write to
+ *
+ * Prints each MD5 and its real file path.  This is done only when the -m
+ * arg is passed to FSSB.
+ */
 void print_map(proxyfile_list *list, FILE *log_file) {
     fprintf(log_file, "\n");
     fprintf(log_file, "==============\n");

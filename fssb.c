@@ -183,8 +183,6 @@ void init() {
 
     PROXY_FILE_LEN = strlen(SANDBOX_DIR) + 32;
 
-    fprintf(stderr, "fssb: sandbox directory: %s\n", SANDBOX_DIR);
-
     list = new_proxyfile_list();
     list->SANDBOX_DIR = SANDBOX_DIR;
     list->PROXY_FILE_LEN = PROXY_FILE_LEN;

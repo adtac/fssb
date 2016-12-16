@@ -77,6 +77,21 @@ proxyfile *search_proxyfile(proxyfile_list *list, char *file_path) {
     return NULL;
 }
 
+void delete_proxyfile(proxyfile_list *list, proxyfile *pf) {
+    if(pf->prev)
+        ((proxyfile *)pf->prev)->next = pf->next;
+    else /* only head has this property */
+        list->head = pf->next;
+
+    if(pf->next)
+        ((proxyfile *)pf->next)->prev = pf->prev;
+
+    free(pf->file_path);
+    free(pf->md5);
+    free(pf->proxy_path);
+    free(pf);
+}
+
 void print_map(proxyfile_list *list, FILE *log_file) {
     fprintf(log_file, "\n");
     fprintf(log_file, "==============\n");

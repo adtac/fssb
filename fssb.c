@@ -220,12 +220,13 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    if(print_list)
+        print_map(list, log_file);
+
     if(cleanup) {
         remove_proxy_files(list);
         rmdir(SANDBOX_DIR);
     }
-    else if(print_list)
-        print_map(list, log_file);
 
     return 0;
 }

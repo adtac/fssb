@@ -23,7 +23,7 @@ int PROXY_FILE_LEN;
 
 proxyfile_list *list;
 
-FILE *log_file;
+FILE *log_file, *debug_file;
 
 int cleanup, print_list;
 
@@ -60,7 +60,7 @@ int handle_syscalls(pid_t child) {
         int flags = get_syscall_arg(child, 1);
 
         /* log message */
-        fprintf(log_file, "open(\"%s\", %d)\n", file, flags);
+        fprintf(debug_file, "open(\"%s\", %d)\n", file, flags);
 
         /* name switch */
         char *new_name;
@@ -70,7 +70,7 @@ int handle_syscalls(pid_t child) {
         proxyfile *cur = NULL;
 
         if(flags & O_APPEND || flags & O_CREAT || flags & O_WRONLY) {
-            fprintf(log_file, "opening with write access\n");
+            fprintf(debug_file, "opening with write access\n");
 
             /* if the file already exists, use it */
             cur = search_proxyfile(list, file);
@@ -81,7 +81,7 @@ int handle_syscalls(pid_t child) {
             switch_name = 1;
         }
         if(flags == O_RDONLY) {
-            fprintf(log_file, "opening with read access\n");
+            fprintf(debug_file, "opening with read access\n");
 
             proxyfile *cur = search_proxyfile(list, file);
             if(cur != NULL) {
@@ -203,7 +203,12 @@ int main(int argc, char **argv) {
     int child_argc = argc - pos;
     char **child_argv = argv + pos;
 
-    set_parameters(pos - 1, argv, &cleanup, &log_file, &print_list);
+    set_parameters(pos - 1,
+                   argv,
+                   &cleanup,
+                   &log_file,
+                   &debug_file,
+                   &print_list);
 
     init();
 

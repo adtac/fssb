@@ -54,6 +54,7 @@ void build_help() {
     insert_help("-h", "show this help and exit", 0);
     insert_help("-r", "remove all temporary files at the end", 0);
     insert_help("-o", "logging output file", 1);
+    insert_help("-d", "debug output file", 1);
     insert_help("-m", "print file to proxyfile map at the end", 0);
 }
 
@@ -139,6 +140,37 @@ You can find a more complete at https://github.com/adtac/fssb\n");
 }
 
 /**
+ * get_log_file_obj - returns a file object to write to
+ * @argc: number of arguments
+ * @argv: argument list
+ * @i:    index of the flag
+ *
+ * Note: this logs to stderr and exits with an error code 1 if the given
+ * file does not exist or if there are insufficient number of arguments.
+ *
+ * Returns a (FILE *) object that can be used.
+ */
+FILE *get_log_file_obj(int argc, char **argv, int i)
+{
+    FILE *retval;
+
+    struct stat sb;
+    if(i == argc - 1) {
+        fprintf(stderr, "fssb: error: no logging file specified\n");
+        exit(1);
+    }
+
+    retval = fopen(argv[i + 1], "w");
+    if(retval == NULL) {
+        fprintf(stderr, "fssb: error: cannot create log file %s\n",
+                        argv[i + 1]);
+        exit(1);
+    }
+
+    return retval;
+}
+
+/**
  * set_parameters - reads the command line arguments and sets the values
  * @argc:     number of args given to the tracer
  * @argv:     argument list
@@ -149,11 +181,13 @@ void set_parameters(int argc,
                     char **argv,
                     int *cleanup,
                     FILE **log_file,
+                    FILE **debug_file,
                     int *print_map)
 {
     /* default values */
     *cleanup = 0;
     *log_file = stdout;
+    *debug_file = fopen("/dev/null", "w");
     *print_map = 0;
 
     int i;
@@ -164,18 +198,14 @@ void set_parameters(int argc,
         if(strcmp(argv[i], "-m") == 0)
             *print_map = 1;
 
+        if(strcmp(argv[i], "-d") == 0) {
+            fclose(*debug_file);
+            *debug_file = get_log_file_obj(argc, argv, i);
+            i++;
+        }
+
         if(strcmp(argv[i], "-o") == 0) {
-            struct stat sb;
-            if(i == argc - 1) {
-                fprintf(stderr, "fssb: error: no logging file specified\n");
-                exit(1);
-            }
-            *log_file = fopen(argv[i + 1], "w");
-            if(*log_file == NULL) {
-                fprintf(stderr, "fssb: error: cannot create log file %s\n",
-                                argv[i + 1]);
-                exit(1);
-            }
+            *log_file = get_log_file_obj(argc, argv, i);
             i++;
         }
     }

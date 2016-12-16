@@ -37,6 +37,7 @@ extern void set_parameters(int argc,
                            char **argv,
                            int *cleanup,
                            FILE **log_file,
+                           FILE **debug_file,
                            int *print_map);
 
 extern int get_child_args_start_pos(int argc, char **argv);

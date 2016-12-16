@@ -23,13 +23,14 @@
 #include <stdio.h>
 
 typedef struct {
+    void *next;
     char *file_path, *md5, *proxy_path;
     int fd;
 } proxyfile;
 
 typedef struct {
-    proxyfile *list;
-    int alloc, used;
+    proxyfile *head, *tail;
+    int used;
     int PROXY_FILE_LEN;
     char *SANDBOX_DIR;
 } proxyfile_list;

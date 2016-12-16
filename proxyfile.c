@@ -24,13 +24,12 @@
 #include "proxyfile.h"
 #include "utils.h"
 
-#define PROXYFILE_LIST_ALLOC 128
-
 proxyfile_list *new_proxyfile_list()
 {
     proxyfile_list *retval = (proxyfile_list *)malloc(sizeof(proxyfile_list));
-    retval->list = (proxyfile *)malloc(PROXYFILE_LIST_ALLOC*sizeof(proxyfile));
-    retval->alloc = PROXYFILE_LIST_ALLOC;
+
+    retval->head = NULL;
+    retval->tail = NULL;
     retval->used = 0;
 
     return retval;
@@ -38,14 +37,19 @@ proxyfile_list *new_proxyfile_list()
 
 proxyfile *new_proxyfile(proxyfile_list *list, char *file_path)
 {
-    if(list->used + 1 > list->alloc) {
-        list->alloc *= 2;
-        list->list = (proxyfile *)realloc(list->list,
-                                          list->alloc*sizeof(proxyfile));
+    if(list->head == NULL) { /* first proxyfile */
+        list->head = (proxyfile *)malloc(sizeof(proxyfile));
+        list->tail = list->head;
+        list->tail->next = NULL;
+        list->used = 1;
+    }
+    else { /* append to existing linked list */
+        list->tail->next = (proxyfile *)malloc(sizeof(proxyfile));
+        list->tail = list->tail->next;
+        list->used++;
     }
 
-    proxyfile *cur = list->list + list->used;
-
+    proxyfile *cur = list->tail;
     cur->file_path = file_path; /* no need to copy char-by-char */
 
     cur->md5 = md5sum(file_path); /* just assign the already assigned addr */
@@ -62,10 +66,11 @@ proxyfile *new_proxyfile(proxyfile_list *list, char *file_path)
 proxyfile *search_proxyfile(proxyfile_list *list, char *file_path) {
     char *md5 = md5sum(file_path);
     
-    int i;
-    for(i = 0; i < list->used; i++) {
-        if(strcmp((list->list + i)->md5, md5) == 0)
-            return list->list + i;
+    proxyfile *cur = list->head;
+    while(cur != NULL) {
+        if(strcmp(cur->md5, md5) == 0)
+            return cur;
+        cur = cur->next;
     }
 
     return NULL;
@@ -78,9 +83,9 @@ void print_map(proxyfile_list *list, FILE *log_file) {
     fprintf(log_file, "==============\n");
     fprintf(log_file, "\n");
 
-    int i;
-    for(i = 0; i < list->used; i++) {
-        proxyfile *cur = list->list + i;
+    proxyfile *cur = list->head;
+    while(cur != NULL) {
         fprintf(log_file, "%s = %s\n", cur->md5, cur->file_path);
+        cur = cur->next;
     }
 }

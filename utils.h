@@ -60,4 +60,6 @@ extern void write_bytes(pid_t child,
 
 extern char *md5sum(char *str);
 
+extern char *proxy_path(char *prefix, char *file_path);
+
 #endif /* _UTILS_H */

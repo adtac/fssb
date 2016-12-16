@@ -213,3 +213,25 @@ char *md5sum(char *str)
 
     return retval;
 }
+
+/**
+ * proxy_path - returns a string containing the proxy path
+ * @prefix:    prefix to the MD5 sum
+ * @file_path: path of the original file
+ *
+ * Returns a (char *) pointer.  Remember to free this at the end.
+ */
+char *proxy_path(char *prefix, char *file_path)
+{
+    /* 32 for the MD5 hash, 1 for the null at the end */
+    int malloc_len = strlen(prefix) + 32 + 1;
+    char *retval = (char *)malloc(malloc_len*sizeof(char));
+    *retval = 0;
+
+    strcpy(retval, prefix);
+    char *md5 = md5sum(file_path);
+    strcat(retval, md5);
+    free(md5);
+
+    return retval;
+}

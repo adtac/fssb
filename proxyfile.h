@@ -45,4 +45,6 @@ extern void delete_proxyfile(proxyfile_list *list, proxyfile *pf);
 
 extern void print_map(proxyfile_list *list, FILE *log_file);
 
+extern void remove_proxy_files(proxyfile_list *list);
+
 #endif /* _PROXYFILE_H */

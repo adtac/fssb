@@ -139,3 +139,16 @@ void print_map(proxyfile_list *list, FILE *log_file) {
         cur = cur->next;
     }
 }
+
+/**
+ * remove_proxy_files - delete all proxy files in the sandbox directory
+ * @list: the proxyfile_list
+ */
+void remove_proxy_files(proxyfile_list *list)
+{
+    proxyfile *cur = list->head;
+    while(cur != NULL) {
+        remove(cur->proxy_path);
+        cur = cur->next;
+    }
+}

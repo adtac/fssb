@@ -64,6 +64,13 @@ proxyfile *new_proxyfile(proxyfile_list *list, char *file_path)
     return cur;
 }
 
+/**
+ * search_proxyfile - search for a proxyfile
+ * @list:      the proxyfile_list
+ * @file_path: the file path
+ *
+ * Returns a (proxyfile *) pointer.
+ */
 proxyfile *search_proxyfile(proxyfile_list *list, char *file_path) {
     char *md5 = md5sum(file_path);
     

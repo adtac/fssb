@@ -1,2 +1,4 @@
 *.o
 fssb
+test.c
+test

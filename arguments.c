@@ -116,6 +116,11 @@ int help_requested(int argc, char **argv)
     return 1;
 }
 
+/* comp function for qsort */
+int comp(const void *a, const void *b) {
+    return strcmp(((help *)a)->arg, ((help *)b)->arg);
+}
+
 /**
  * print_help - print the help manual
  */
@@ -124,6 +129,9 @@ void print_help() {
     fprintf(stdout, "\n\
 FSSB is a filesystem sandbox for Linux. It's useful if you want to run a\n\
 program but also protect your files and directories from modification.\n\n");
+
+    /* sort help_list by argument - heavily helps readability */
+    qsort(help_list, help_list_count, sizeof(help), comp);
 
     int i;
     for(i = 0; i < help_list_count; i++) {

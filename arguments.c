@@ -53,8 +53,8 @@ void build_help() {
 
     insert_help("-h", "show this help and exit", 0);
     insert_help("-r", "remove all temporary files at the end", 0);
-    insert_help("-o", "logging output file", 1);
-    insert_help("-d", "debug output file", 1);
+    insert_help("-o", "logging output file (stderr by default)", 1);
+    insert_help("-d", "debug output file (off by default)", 1);
     insert_help("-m", "print file to proxyfile map at the end", 0);
 }
 

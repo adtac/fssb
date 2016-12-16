@@ -104,15 +104,6 @@ int handle_syscalls(pid_t child) {
         /* restore the memory */
         if(switch_name)
             write_bytes(child, word, original_bytes, overwritten_size);
-        }
-
-        /*
-        if(retval > fdlist_size) {
-            fdlist_size *= 2;
-            fdlist = realloc(fdlist, sizeof(struct proxy_file)*fdlist_size);
-            continue;
-        }
-        */
 
         if(cur == NULL || cur->file_path != file)
             free(file);

@@ -35,6 +35,14 @@ proxyfile_list *new_proxyfile_list()
     return retval;
 }
 
+/**
+ * new_proxyfile - create a new proxyfile and append it to the list
+ * @list:      the proxyfile_list
+ * @file_path: path to the file to be added
+ *
+ * Returns a (proxyfile *) pointer pointing to the newly created proxyfile
+ * object.
+ */
 proxyfile *new_proxyfile(proxyfile_list *list, char *file_path)
 {
     if(list->tail == NULL) { /* first proxyfile */

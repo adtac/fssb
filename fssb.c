@@ -109,6 +109,42 @@ int handle_syscalls(pid_t child) {
             free(file);
     }
 
+    if(syscall == SC_UNLINK) {
+        /* get unlink(...) args */
+        long word = get_syscall_arg(child, 0);
+        char *file = get_string(child, word);
+
+        /* name switch */
+        char *new_name;
+        char *original_bytes;
+        int overwritten_size;
+        int switch_name = 0;
+
+        proxyfile *cur = search_proxyfile(list, file);
+        if(cur)
+            new_name = cur->proxy_path;
+        else
+            new_name = proxy_path(SANDBOX_DIR, file);
+
+        /* switch the name */
+        original_bytes = write_string(child,
+                                      word,
+                                      new_name,
+                                      &overwritten_size);
+
+        int retval;
+        if(finish_and_return(child, syscall, &retval) == 0)
+            return 0;
+
+        /* restore the memory */
+        write_bytes(child, word, original_bytes, overwritten_size);
+
+        if(cur)
+            delete_proxyfile(list, cur);
+        else
+            free(new_name);
+    }
+
     return 1;
 }
 

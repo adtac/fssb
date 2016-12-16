@@ -101,8 +101,8 @@ int handle_syscalls(pid_t child) {
         if(finish_and_return(child, syscall, &retval) == 0)
             return 0;
 
-        if(switch_name) {
-            /* restore the memory */
+        /* restore the memory */
+        if(switch_name)
             write_bytes(child, word, original_bytes, overwritten_size);
         }
 

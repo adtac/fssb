@@ -17,6 +17,10 @@
 #include "arguments.h"
 #include "utils.h"
 
+#define RDONLY_MEM_WRITE_SIZE 256
+
+long write_slots[6];
+
 /* Hopefully we don't need a 90-digit number. */
 char SANDBOX_DIR[100];
 int PROXY_FILE_LEN;
@@ -54,94 +58,74 @@ int handle_syscalls(pid_t child) {
     }
 
     if(syscall == SC_OPEN) {
-        /* get open(...) args */
-        long word = get_syscall_arg(child, 0);
-        char *file = get_string(child, word);
+        /* int open(const char *pathname, int flags); */
+
+        long orig_word = get_syscall_arg(child, 0);
+        char *pathname = get_string(child, orig_word);
+
         int flags = get_syscall_arg(child, 1);
 
-        /* log message */
-        fprintf(debug_file, "open(\"%s\", %d)\n", file, flags);
-
-        /* name switch */
-        char *new_name;
-        char *original_bytes;
-        int overwritten_size;
-        int switch_name = 0;
-        proxyfile *cur = NULL;
+        proxyfile *cur;
 
         if(flags & O_APPEND || flags & O_CREAT || flags & O_WRONLY) {
-            fprintf(debug_file, "opening with write access\n");
+            cur = search_proxyfile(list, pathname);
+            if(!cur)
+                cur = new_proxyfile(list, pathname);
 
-            /* if the file already exists, use it */
-            cur = search_proxyfile(list, file);
-            if(cur == NULL)
-                cur = new_proxyfile(list, file);
-
-            new_name = cur->proxy_path;
-            switch_name = 1;
+            write_string(child, write_slots[0], cur->proxy_path);
+            set_syscall_arg(child, 0, write_slots[0]);
         }
-        if(flags == O_RDONLY) {
-            fprintf(debug_file, "opening with read access\n");
 
-            proxyfile *cur = search_proxyfile(list, file);
-            if(cur != NULL) {
+        if(flags & O_RDONLY) {
+            /* If this file has been written to, then we should hijack the arg
+               with the proxyfile because we want the process to see its own
+               changes.  If this file has never been opened with write
+               permissions, we can just give the same file (this is more
+               performant than copying the file). */
+            cur = search_proxyfile(list, pathname);
+
+            char *new_name;
+            if(cur)
                 new_name = cur->proxy_path;
-                switch_name = 1;
-            }
-        }
+            else
+                new_name = pathname;
 
-        if(switch_name) {
-            original_bytes = write_string(child,
-                                          word,
-                                          new_name,
-                                          &overwritten_size);
+            write_string(child, write_slots[0], cur->proxy_path);
+            set_syscall_arg(child, 0, write_slots[0]);
         }
 
         int retval;
         if(finish_and_return(child, syscall, &retval) == 0)
             return 0;
 
-        /* restore the memory */
-        if(switch_name)
-            write_bytes(child, word, original_bytes, overwritten_size);
-
-        if(cur == NULL || cur->file_path != file)
-            free(file);
+        set_syscall_arg(child, 0, orig_word);
     }
 
     if(syscall == SC_UNLINK) {
-        /* get unlink(...) args */
-        long word = get_syscall_arg(child, 0);
-        char *file = get_string(child, word);
+        /* int unlink(const char *pathname); */
 
-        /* name switch */
+        long orig_word = get_syscall_arg(child, 0);
+        char *pathname = get_string(child, orig_word);
+
+        proxyfile *cur = search_proxyfile(list, pathname);
         char *new_name;
-        char *original_bytes;
-        int overwritten_size;
-        int switch_name = 0;
 
-        proxyfile *cur = search_proxyfile(list, file);
-        if(cur)
+        if(cur) /* it's a file we've previously written to */
             new_name = cur->proxy_path;
         else
-            new_name = proxy_path(SANDBOX_DIR, file);
+            new_name = proxy_path(SANDBOX_DIR, pathname);
 
-        /* switch the name */
-        original_bytes = write_string(child,
-                                      word,
-                                      new_name,
-                                      &overwritten_size);
+        write_string(child, write_slots[0], new_name);
 
         int retval;
         if(finish_and_return(child, syscall, &retval) == 0)
             return 0;
 
-        /* restore the memory */
-        write_bytes(child, word, original_bytes, overwritten_size);
+        set_syscall_arg(child, 0, orig_word);
 
-        if(cur)
+        if(cur) /* let's take this off our records */
             delete_proxyfile(list, cur);
-        else
+        else /* we malloc'd some memory, let's free it */
             free(new_name);
     }
 
@@ -170,7 +154,7 @@ int process_child(int argc, char **argv) {
     return execvp(args[0], args);
 }
 
-void init() {
+void init(int child) {
     struct stat sb;
 
     int i;
@@ -186,6 +170,10 @@ void init() {
     list = new_proxyfile_list();
     list->SANDBOX_DIR = SANDBOX_DIR;
     list->PROXY_FILE_LEN = PROXY_FILE_LEN;
+
+    long start_pos = get_readonly_mem(child);
+    for(int i = 0; i < 6; i++)
+        write_slots[i] = start_pos + i*RDONLY_MEM_WRITE_SIZE;
 }
 
 int main(int argc, char **argv) {
@@ -208,11 +196,12 @@ int main(int argc, char **argv) {
                    &debug_file,
                    &print_list);
 
-    init();
-
     pid_t child = fork();
-    if(child > 0)
+
+    if(child > 0) {
+        init(child);
         trace(child);
+    }
     else if(child == 0)
         process_child(child_argc, child_argv);
     else {

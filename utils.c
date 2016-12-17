@@ -167,54 +167,20 @@ char *get_string(pid_t child, unsigned long addr)
  *
  * Returns a pointer to a memory address of bytes that needs to be restored.
  */
-unsigned char *write_string(pid_t child,
-                            unsigned long addr,
-                            char *str,
-                            int *overwritten_size)
+void write_string(pid_t child,
+                  unsigned long addr,
+                  char *str)
 {
-    unsigned char *original_bytes = malloc(1024);
-    int alloc = 1024;
-    *overwritten_size = 0;
-
+    int copied = 0;
     while(1) {
         unsigned long word;
+        memcpy(&word, str + copied, sizeof(word));
+        ptrace(PTRACE_POKEDATA, child, addr + copied, word);
 
-        word = ptrace(PTRACE_PEEKDATA, child, addr + *overwritten_size);
-        if(*overwritten_size + sizeof(word) > alloc) {
-            alloc *= 2;
-            original_bytes = (unsigned char *)realloc(original_bytes, alloc);
-        }
-        memcpy(original_bytes + *overwritten_size, &word, sizeof(word));
-
-        memcpy(&word, str + *overwritten_size, sizeof(word));
-        ptrace(PTRACE_POKEDATA, child, addr + *overwritten_size, word);
-
-        *overwritten_size += sizeof(word);
+        copied += sizeof(word);
 
         if(memchr(&word, 0, sizeof(word)) != NULL)
             break;
-    }
-
-    return original_bytes;
-}
-
-/**
- * write_bytes - write n bytes to the given memory address
- * @child: PID of the child process
- * @addr:  memory address location
- * @bytes: bytes to be written
- * @n:     stores the number of bytes overwritten
- */
-void write_bytes(pid_t child,
-                 unsigned long addr,
-                 unsigned char *bytes,
-                 int n) {
-    int cur;
-    for(cur = 0; cur < n; ) {
-        unsigned long word;
-        memcpy(&word, bytes + cur, sizeof(word));
-        ptrace(PTRACE_POKETEXT, child, addr + cur, word);
-        cur += sizeof(word);
     }
 }
 

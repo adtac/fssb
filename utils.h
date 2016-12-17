@@ -55,15 +55,11 @@ extern long get_syscall_arg(pid_t child, int n);
 
 extern void set_syscall_arg(pid_t child, int n, long regval);
 
-extern unsigned char *write_string(pid_t child,
-                                   unsigned long addr,
-                                   char *str,
-                                   int *overwritten_bytes);
+extern char *get_string(pid_t child, unsigned long addr);
 
-extern void write_bytes(pid_t child,
-                        unsigned long addr,
-                        unsigned char *bytes,
-                        int n);
+extern void write_string(pid_t child,
+                         unsigned long addr,
+                         char *str);
 
 extern char *md5sum(char *str);
 

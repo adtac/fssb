@@ -51,7 +51,7 @@ proxyfile_list *new_proxyfile_list()
  */
 proxyfile *new_proxyfile(proxyfile_list *list, char *file_path)
 {
-    if(list->tail == NULL) { /* first proxyfile */
+    if(list->head == NULL) { /* first proxyfile */
         list->head = (proxyfile *)malloc(sizeof(proxyfile));
         list->tail = list->head;
         list->tail->next = NULL;

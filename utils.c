@@ -87,6 +87,39 @@ long get_syscall_arg(pid_t child, int n)
 }
 
 /**
+ * set_syscall_arg - set the nth syscall argument
+ * @child:  PID of the child process
+ * @n:      which argument (max 6 args for any syscall)
+ * @regval: register value
+ */
+void set_syscall_arg(pid_t child, int n, long regval) {
+    struct user_regs_struct regs;
+    ptrace(PTRACE_GETREGS, child, (char *)&regs, 0);
+
+    switch(n) {
+#ifdef __amd64__
+    /* x86_64 has {rdi, rsi, rdx, r10, r8, r9} */
+    case 0: regs.rdi = regval; break;
+    case 1: regs.rsi = regval; break;
+    case 2: regs.rdx = regval; break;
+    case 3: regs.r10 = regval; break;
+    case 4: regs.r8  = regval; break;
+    case 5: regs.r9  = regval; break;
+#else
+    /* x86 has {ebx, ecx, edx, esi, edi, ebp} */
+    case 0: regs.ebx = regval; break;
+    case 1: regs.ecx = regval; break;
+    case 2: regs.edx = regval; break;
+    case 3: regs.esi = regval; break;
+    case 4: regs.edi = regval; break;
+    case 5: regs.ebp = regval; break;
+#endif
+    }
+
+    ptrace(PTRACE_SETREGS, child, (char *)&regs, 0);
+}
+
+/**
  * get_string - returns the string at the given address of the child process
  * @child: PID of the child process
  * @addr:  memory address location

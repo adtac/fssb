@@ -46,7 +46,7 @@ extern int syscall_breakpoint(pid_t child);
 
 extern long get_syscall_arg(pid_t child, int n);
 
-extern char *get_string(pid_t child, unsigned long addr);
+extern void set_syscall_arg(pid_t child, int n, long regval);
 
 extern unsigned char *write_string(pid_t child,
                                    unsigned long addr,

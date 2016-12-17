@@ -90,7 +90,7 @@ int handle_syscalls(pid_t child) {
             else
                 new_name = pathname;
 
-            write_string(child, write_slots[0], cur->proxy_path);
+            write_string(child, write_slots[0], new_name);
             set_syscall_arg(child, 0, write_slots[0]);
         }
 

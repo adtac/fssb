@@ -90,14 +90,10 @@ int handle_syscalls(pid_t child) {
             cur = search_proxyfile(list, pathname);
             fprintf(debug_file, "open as read %s\n", pathname);
 
-            char *new_name;
-            if(cur)
-                new_name = cur->proxy_path;
-            else
-                new_name = pathname;
-
-            write_string(child, write_slots[0], new_name);
-            set_syscall_arg(child, 0, write_slots[0]);
+            if(cur) {
+                write_string(child, write_slots[0], cur->proxy_path);
+                set_syscall_arg(child, 0, write_slots[0]);
+            }
         }
 
         int retval;

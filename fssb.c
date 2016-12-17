@@ -130,6 +130,43 @@ int handle_syscalls(pid_t child) {
             free(new_name);
     }
 
+    if(syscall == SC_RENAME) {
+        /* int rename(const char *oldpath, const char *newpath); */
+
+        long orig_old_word = get_syscall_arg(child, 0),
+             orig_new_word = get_syscall_arg(child, 1);
+        char *oldpath = get_string(child, orig_old_word),
+             *newpath = get_string(child, orig_new_word);
+
+        char *new_old_name = proxy_path(SANDBOX_DIR, oldpath),
+             *new_new_name = proxy_path(SANDBOX_DIR, newpath);
+
+        printf("%s\n%s\n", new_old_name, new_new_name);
+
+        write_string(child, write_slots[0], new_old_name);
+        write_string(child, write_slots[1], new_new_name);
+        set_syscall_arg(child, 0, write_slots[0]);
+        set_syscall_arg(child, 1, write_slots[1]);
+
+        int retval;
+        if(finish_and_return(child, syscall, &retval) == 0)
+            return 0;
+
+        set_syscall_arg(child, 0, orig_old_word);
+        set_syscall_arg(child, 1, orig_new_word);
+
+        proxyfile *oldpf = search_proxyfile(list, oldpath);
+        if(oldpf) { /* nothing to do if this is an invalid rename */
+            delete_proxyfile(list, oldpf);
+
+            /* register the new file as a known file for future reads */
+            proxyfile *new = new_proxyfile(list, newpath);
+        }
+
+        free(new_old_name);
+        free(new_new_name);
+    }
+
     return 1;
 }
 

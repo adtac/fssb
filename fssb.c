@@ -124,11 +124,20 @@ int handle_syscalls(pid_t child) {
 
         if(cur) /* it's a file we've previously written to */
             new_name = cur->proxy_path;
-        else
+        else {
             new_name = proxy_path(SANDBOX_DIR, pathname);
 
-        write_string(child, write_slots[swap_arg], new_name);
-        set_syscall_arg(child, swap_arg, write_slots[swap_arg]);
+            struct stat sb;
+            if(!stat(pathname, &sb)) /* this file actually exists */
+                fclose(fopen(new_name, "w"));
+            else /* this file doesn't exist; so let them try to remove it */
+                new_name = pathname;
+        }
+
+        if(new_name != pathname) {
+            write_string(child, write_slots[swap_arg], new_name);
+            set_syscall_arg(child, swap_arg, write_slots[swap_arg]);
+        }
 
         int retval;
         if(finish_and_return(child, syscall, &retval) == 0)

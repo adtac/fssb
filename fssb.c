@@ -2,15 +2,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <errno.h>
 #include <assert.h>
 #include <fcntl.h>
 #include <sys/ptrace.h>
 #include <sys/user.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
-#include <bits/types.h>
-#include <openssl/md5.h>
 
 #include "syscalls.h"
 #include "proxyfile.h"

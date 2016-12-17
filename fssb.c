@@ -72,6 +72,7 @@ int handle_syscalls(pid_t child) {
         proxyfile *cur;
 
         if(flags & O_APPEND || flags & O_CREAT || flags & O_WRONLY) {
+            fprintf(debug_file, "open as write%s\n", pathname);
             cur = search_proxyfile(list, pathname);
             if(!cur)
                 cur = new_proxyfile(list, pathname);
@@ -87,6 +88,7 @@ int handle_syscalls(pid_t child) {
                permissions, we can just give the same file (this is more
                performant than copying the file). */
             cur = search_proxyfile(list, pathname);
+            fprintf(debug_file, "open as read %s\n", pathname);
 
             char *new_name;
             if(cur)
@@ -110,6 +112,8 @@ int handle_syscalls(pid_t child) {
 
         long orig_word = get_syscall_arg(child, 0);
         char *pathname = get_string(child, orig_word);
+
+        fprintf(debug_file, "unlink %s\n", pathname);
 
         proxyfile *cur = search_proxyfile(list, pathname);
         char *new_name;
@@ -141,6 +145,8 @@ int handle_syscalls(pid_t child) {
              orig_new_word = get_syscall_arg(child, 1);
         char *oldpath = get_string(child, orig_old_word),
              *newpath = get_string(child, orig_new_word);
+
+        fprintf(debug_file, "rename %s -> %s\n", oldpath, newpath);
 
         char *new_old_name = proxy_path(SANDBOX_DIR, oldpath),
              *new_new_name = proxy_path(SANDBOX_DIR, newpath);

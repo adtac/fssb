@@ -69,4 +69,6 @@ extern char *md5sum(char *str);
 
 extern char *proxy_path(char *prefix, char *file_path);
 
+extern long get_readonly_mem(pid_t child);
+
 #endif /* _UTILS_H */

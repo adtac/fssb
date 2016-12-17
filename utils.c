@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 #include <wait.h>
@@ -270,4 +271,37 @@ char *proxy_path(char *prefix, char *file_path)
     free(md5);
 
     return retval;
+}
+
+/**
+ * get_readonly_mem - gets the starting position of the readonly memory
+ * @child: PID of the child process
+ *
+ * Returns a long corresponding to the starting address of the readonly
+ * section of the child's memory.
+ */
+long get_readonly_mem(pid_t child) {
+    char procfile[256];
+    sprintf(procfile, "/proc/%d/maps", child);
+    FILE *maps = fopen(procfile, "r");
+
+    while(1) {
+        char *buffer = NULL;
+        size_t n = 0;
+        ssize_t size = getline(&buffer, &n, maps);
+        if(size == -1) {
+            free(buffer);
+            break;
+        }
+
+        if(strstr(buffer, "r-xp")) {
+            long memaddr;
+            sscanf(buffer, "%lx", &memaddr);
+            return memaddr;
+        }
+
+        free(buffer);
+    }
+
+    return -1;
 }

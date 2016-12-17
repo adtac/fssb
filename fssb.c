@@ -48,6 +48,10 @@ int handle_syscalls(pid_t child) {
     if(syscall_breakpoint(child) != 0)
         return 0;
 
+    long start_pos = get_readonly_mem(child);
+    for(int i = 0; i < 6; i++)
+        write_slots[i] = start_pos + i*RDONLY_MEM_WRITE_SIZE;
+
     int syscall;
     syscall = get_reg(child, orig_eax);
 
@@ -208,10 +212,6 @@ void init(int child) {
     list = new_proxyfile_list();
     list->SANDBOX_DIR = SANDBOX_DIR;
     list->PROXY_FILE_LEN = PROXY_FILE_LEN;
-
-    long start_pos = get_readonly_mem(child);
-    for(int i = 0; i < 6; i++)
-        write_slots[i] = start_pos + i*RDONLY_MEM_WRITE_SIZE;
 }
 
 int main(int argc, char **argv) {

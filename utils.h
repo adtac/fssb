@@ -42,6 +42,13 @@
                                    offsetof(struct user, regs.reg))
 #endif
 
+#ifndef set_reg
+#define set_reg(child, reg, val) ptrace(PTRACE_SETREGS, \
+                                        child, \
+                                        offsetof(struct user, regs.reg), \
+                                        val)
+#endif
+
 extern int syscall_breakpoint(pid_t child);
 
 extern long get_syscall_arg(pid_t child, int n);

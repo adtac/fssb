@@ -1,5 +1,5 @@
 /**
- * arguments.h - Argument handling.  Part of the FSSB project.
+ * arguments.c - Argument handling operations.  Part of the FSSB project.
  *
  * Copyright (C) 2016 Adhityaa Chandrasekar
  *

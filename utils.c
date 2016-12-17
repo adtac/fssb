@@ -61,23 +61,26 @@ int syscall_breakpoint(pid_t child)
  */
 long get_syscall_arg(pid_t child, int n)
 {
+    struct user_regs_struct regs;
+    ptrace(PTRACE_GETREGS, child, (char *)&regs, 0);
+
     switch(n) {
 #ifdef __amd64__
     /* x86_64 has {rdi, rsi, rdx, r10, r8, r9} */
-    case 0: return get_reg(child, rdi);
-    case 1: return get_reg(child, rsi);
-    case 2: return get_reg(child, rdx);
-    case 3: return get_reg(child, r10);
-    case 4: return get_reg(child, r8);
-    case 5: return get_reg(child, r9);
+    case 0: return regs.rdi;
+    case 1: return regs.rsi;
+    case 2: return regs.rdx;
+    case 3: return regs.r10;
+    case 4: return regs.r8;
+    case 5: return regs.r9;
 #else
     /* x86 has {ebx, ecx, edx, esi, edi, ebp} */
-    case 0: return get_reg(child, ebx);
-    case 1: return get_reg(child, ecx);
-    case 2: return get_reg(child, edx);
-    case 3: return get_reg(child, esi);
-    case 4: return get_reg(child, edi);
-    case 5: return get_reg(child, ebp);
+    case 0: return regs.ebx;
+    case 1: return regs.ecx;
+    case 2: return regs.edx;
+    case 3: return regs.esi;
+    case 4: return regs.edi;
+    case 5: return regs.ebp;
 #endif
     default: return -1L;
     }

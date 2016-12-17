@@ -116,6 +116,7 @@ int handle_syscalls(pid_t child) {
             new_name = proxy_path(SANDBOX_DIR, pathname);
 
         write_string(child, write_slots[0], new_name);
+        set_syscall_arg(child, 0, write_slots[0]);
 
         int retval;
         if(finish_and_return(child, syscall, &retval) == 0)

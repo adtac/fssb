@@ -2,6 +2,7 @@
 #define SC_WRITE      1
 #define SC_OPEN       2
 #define SC_CLOSE      3
+#define SC_EXECVE     59
 #define SC_EXIT       60
 #define SC_RENAME     82
 #define SC_UNLINK     87

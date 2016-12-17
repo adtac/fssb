@@ -19,6 +19,7 @@
 
 #define RDONLY_MEM_WRITE_SIZE 256
 
+long first_rxp_mem = -1;
 long write_slots[6];
 
 /* Hopefully we don't need a 90-digit number. */
@@ -48,12 +49,14 @@ int handle_syscalls(pid_t child) {
     if(syscall_breakpoint(child) != 0)
         return 0;
 
-    long start_pos = get_readonly_mem(child);
-    for(int i = 0; i < 6; i++)
-        write_slots[i] = start_pos + i*RDONLY_MEM_WRITE_SIZE;
-
     int syscall;
     syscall = get_reg(child, orig_eax);
+
+    if(syscall != SC_EXECVE && first_rxp_mem == -1) {
+        first_rxp_mem = get_readonly_mem(child);
+        for(int i = 0; i < 6; i++)
+            write_slots[i] = first_rxp_mem + i*RDONLY_MEM_WRITE_SIZE;
+    }
 
     if(syscall == SC_EXIT || syscall == SC_EXIT_GROUP) {
         int exit_code = get_syscall_arg(child, 0);

@@ -63,7 +63,7 @@ int syscall_breakpoint(pid_t child)
 long get_syscall_arg(pid_t child, int n)
 {
     struct user_regs_struct regs;
-    ptrace(PTRACE_GETREGS, child, (char *)&regs, 0);
+    ptrace(PTRACE_GETREGS, child, 0, &regs);
 
     switch(n) {
 #ifdef __amd64__
@@ -95,7 +95,7 @@ long get_syscall_arg(pid_t child, int n)
  */
 void set_syscall_arg(pid_t child, int n, long regval) {
     struct user_regs_struct regs;
-    ptrace(PTRACE_GETREGS, child, (char *)&regs, 0);
+    ptrace(PTRACE_GETREGS, child, 0, &regs);
 
     switch(n) {
 #ifdef __amd64__
@@ -117,7 +117,7 @@ void set_syscall_arg(pid_t child, int n, long regval) {
 #endif
     }
 
-    ptrace(PTRACE_SETREGS, child, (char *)&regs, 0);
+    ptrace(PTRACE_SETREGS, child, 0, &regs);
 }
 
 /**
@@ -175,7 +175,7 @@ void write_string(pid_t child,
     while(1) {
         unsigned long word;
         memcpy(&word, str + copied, sizeof(word));
-        ptrace(PTRACE_POKEDATA, child, addr + copied, word);
+        ptrace(PTRACE_POKETEXT, child, addr + copied, word);
 
         copied += sizeof(word);
 

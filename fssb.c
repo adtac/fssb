@@ -147,8 +147,6 @@ int handle_syscalls(pid_t child) {
         char *new_old_name = proxy_path(SANDBOX_DIR, oldpath),
              *new_new_name = proxy_path(SANDBOX_DIR, newpath);
 
-        printf("%s\n%s\n", new_old_name, new_new_name);
-
         write_string(child, write_slots[0], new_old_name);
         write_string(child, write_slots[1], new_new_name);
         set_syscall_arg(child, 0, write_slots[0]);

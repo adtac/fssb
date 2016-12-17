@@ -106,10 +106,15 @@ int handle_syscalls(pid_t child) {
         set_syscall_arg(child, 0, orig_word);
     }
 
-    if(syscall == SC_UNLINK) {
+    if(syscall == SC_UNLINK || syscall == SC_UNLINKAT) {
         /* int unlink(const char *pathname); */
+        /* int unlinkat(int dirfd, const char *pathname, int flags); */
 
-        long orig_word = get_syscall_arg(child, 0);
+        int swap_arg = 0;
+        if(syscall == SC_UNLINKAT)
+            swap_arg = 1;
+
+        long orig_word = get_syscall_arg(child, swap_arg);
         char *pathname = get_string(child, orig_word);
 
         fprintf(debug_file, "unlink %s\n", pathname);
@@ -122,14 +127,14 @@ int handle_syscalls(pid_t child) {
         else
             new_name = proxy_path(SANDBOX_DIR, pathname);
 
-        write_string(child, write_slots[0], new_name);
-        set_syscall_arg(child, 0, write_slots[0]);
+        write_string(child, write_slots[swap_arg], new_name);
+        set_syscall_arg(child, swap_arg, write_slots[swap_arg]);
 
         int retval;
         if(finish_and_return(child, syscall, &retval) == 0)
             return 0;
 
-        set_syscall_arg(child, 0, orig_word);
+        set_syscall_arg(child, swap_arg, orig_word);
 
         if(cur) /* let's take this off our records */
             delete_proxyfile(list, cur);

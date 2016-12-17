@@ -76,7 +76,7 @@ int handle_syscalls(pid_t child) {
             set_syscall_arg(child, 0, write_slots[0]);
         }
 
-        if(flags & O_RDONLY) {
+        if(flags == O_RDONLY) {
             /* If this file has been written to, then we should hijack the arg
                with the proxyfile because we want the process to see its own
                changes.  If this file has never been opened with write

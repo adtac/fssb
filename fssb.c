@@ -222,7 +222,7 @@ int process_child(int argc, char **argv) {
     char *args[argc+1];
     for(i=0; i < argc; i++)
         args[i] = argv[i];
-    args[argc] = NULL;  /* execvp needs NULL terminated list */
+    args[argc] = NULL;  /* execvp needs a NULL terminated list */
 
     ptrace(PTRACE_TRACEME);
     kill(getpid(), SIGSTOP);

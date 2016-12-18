@@ -273,8 +273,15 @@ int main(int argc, char **argv) {
         init(child);
         trace(child);
     }
-    else if(child == 0)
-        process_child(child_argc, child_argv);
+    else if(child == 0) {
+        int return_code = 0;
+        if(process_child(child_argc, child_argv) == -1) {
+            fprintf(stderr, "fssb: %s: command not found\n", child_argv[0]);
+            return_code = 1;
+        }
+
+        return return_code;
+    }
     else {
         fprintf(stderr, "fssb: error: cannot fork\n");
         return 1;

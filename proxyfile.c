@@ -127,15 +127,9 @@ void delete_proxyfile(proxyfile_list *list, proxyfile *pf) {
  * arg is passed to FSSB.
  */
 void print_map(proxyfile_list *list, FILE *log_file) {
-    fprintf(log_file, "\n");
-    fprintf(log_file, "==============\n");
-    fprintf(log_file, " File mapping \n");
-    fprintf(log_file, "==============\n");
-    fprintf(log_file, "\n");
-
     proxyfile *cur = list->head;
     while(cur != NULL) {
-        fprintf(log_file, "%s = %s\n", cur->md5, cur->file_path);
+        fprintf(log_file, "    + %s = %s\n", cur->md5, cur->file_path);
         cur = cur->next;
     }
 }

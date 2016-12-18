@@ -135,6 +135,29 @@ void print_map(proxyfile_list *list, FILE *log_file) {
 }
 
 /**
+ * write_map - writes the proxy file map list to a file
+ * @list:        the proxfile_list
+ * @SANDBOX_DIR: the sandbox directory
+ *
+ * Writes the list of proxy files and their actual file maps.
+ */
+extern void write_map(proxyfile_list *list, char *SANDBOX_DIR)
+{
+    char proxyfile_map[256];
+    strcpy(proxyfile_map, SANDBOX_DIR);
+    strcat(proxyfile_map, "file-map");
+    FILE *pfm = fopen(proxyfile_map, "w");
+
+    proxyfile *cur = list->head;
+    while(cur != NULL) {
+        fprintf(pfm, "%s%s = %s\n", SANDBOX_DIR, cur->md5, cur->file_path);
+        cur = cur->next;
+    }
+
+    fclose(pfm);
+}
+
+/**
  * remove_proxy_files - delete all proxy files in the sandbox directory
  * @list: the proxyfile_list
  */

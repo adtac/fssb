@@ -261,6 +261,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    write_map(list, SANDBOX_DIR);
     if(print_list)
         print_map(list, log_file);
 

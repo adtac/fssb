@@ -215,7 +215,7 @@ void init(int child) {
 
     int i;
     for(i = 1; ; i++) {
-        sprintf(SANDBOX_DIR, "/tmp/fssb.%d/", i);
+        sprintf(SANDBOX_DIR, "/tmp/fssb-%d/", i);
         if(stat(SANDBOX_DIR, &sb))
             break;
     }

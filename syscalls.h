@@ -23,6 +23,7 @@
 #define SC_CLOSE      3
 #define SC_STAT       4
 #define SC_LSTAT      6
+#define SC_ACCESS     21
 #define SC_EXECVE     59
 #define SC_EXIT       60
 #define SC_RENAME     82

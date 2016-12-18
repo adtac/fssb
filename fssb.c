@@ -204,7 +204,7 @@ int handle_syscalls(pid_t child) {
         free(new_new_name);
     }
 
-    if(syscall == SC_STAT || syscall == SC_LSTAT) {
+    if(syscall == SC_STAT || syscall == SC_LSTAT || syscall == SC_ACCESS) {
         long orig_word = get_syscall_arg(child, 0);
         char *pathname = get_string(child, orig_word);
 

@@ -10,12 +10,9 @@ includes creating, modifying, renaming, and deleting files.
 
 The applications are endless:
 
- * Run arbitrary binaries that you don't trust safely (maybe you downloaded  
-   it from the internet).
- * FSSB provides a safe, repeatable environment for programs. This can be  
-   useful for debugging programs.
- * Make dry runs to see how a program behaves keeping your files intact. You  
-   can see exactly what changes the program made.
+ * Run arbitrary binaries that you don't trust safely (maybe you downloaded it from the internet).
+ * FSSB provides a safe, repeatable environment for programs. This can be useful for debugging programs.
+ * Make dry runs to see how a program behaves keeping your files intact. You can see exactly what changes the program made.
 
 ## Installation
 

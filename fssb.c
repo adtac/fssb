@@ -204,6 +204,24 @@ int handle_syscalls(pid_t child) {
         free(new_new_name);
     }
 
+    if(syscall == SC_STAT || syscall == SC_LSTAT) {
+        long orig_word = get_syscall_arg(child, 0);
+        char *pathname = get_string(child, orig_word);
+
+        proxyfile *cur = search_proxyfile(list, pathname);
+
+        if(cur) { /* it's a file we've previously written to */
+            write_string(child, write_slots[0], cur->proxy_path);
+            set_syscall_arg(child, 0, write_slots[0]);
+        }
+
+        int retval;
+        if(finish_and_return(child, syscall, &retval) == 0)
+            return 0;
+
+        set_syscall_arg(child, 0, orig_word);
+    }
+
     return 1;
 }
 

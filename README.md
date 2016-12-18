@@ -66,7 +66,7 @@ However, if you run it wrapped around FSSB:
 $ ./fssb -m -- python program.py
 Hello world!
 fssb: child exited with 0
-fssb: sandbox directory: /tmp/fssb.1
+fssb: sandbox directory: /tmp/fssb-1
     + 25fa8325e4e0eb8180445e42558e60bd = new_file
 ```
 
@@ -80,7 +80,7 @@ cat: new_file: No such file or directory
 Instead, the file is actually created in a sandbox:
 
 ```bash
-$ cat /tmp/fssb.1/25fa8325e4e0eb8180445e42558e60bd
+$ cat /tmp/fssb-1/25fa8325e4e0eb8180445e42558e60bd
 Hello world!
 ```
 

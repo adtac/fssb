@@ -14,6 +14,9 @@ The applications are endless:
  * FSSB provides a safe, repeatable environment for programs. This can be useful for debugging programs.
  * Make dry runs to see how a program behaves keeping your files intact. You can see exactly what changes the program made.
 
+Please note that FSSB is still in alpha. Check out the `Contributing` section
+if you'd like to contribute.
+
 ## Installation
 
 FSSB is a very lightweight application. It doesn't require too many

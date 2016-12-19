@@ -138,6 +138,10 @@ There's still a lot of stuff to do. And I'd really appreciate help over here.
 I've tried to make the code very readable with looots of comments and
 documentation for what each thing does.
 
+And of course, I've only implemented this for my x86_64 linux system. I'd
+greatly appreciate any help if someone could make this portable to other archs
+(please take a look at the `syscalls.h` file for this).
+
 ## License
 
 ```

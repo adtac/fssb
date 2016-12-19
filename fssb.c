@@ -205,6 +205,10 @@ int handle_syscalls(pid_t child) {
     }
 
     if(syscall == SC_STAT || syscall == SC_LSTAT || syscall == SC_ACCESS) {
+        /* int stat(const char *pathname, struct stat *buf); */
+        /* int lstat(const char *pathname, struct stat *buf); */
+        /* int access(const char *pathname, int mode); */
+
         long orig_word = get_syscall_arg(child, 0);
         char *pathname = get_string(child, orig_word);
 

@@ -95,7 +95,7 @@ You can run `./fssb -h` to see more options.
 
 In Linux, every program's every operation (well, not every operation; most)
 is actually made through something called a system call - or syscall for
-short. The `open` command in Pythin is actually a `fopen` command written
+short. The `open` command in Python is actually a `fopen` command written
 in C a layer below, which is actually a syscall called `open`
 (this is wrapped by `glibc`).
 

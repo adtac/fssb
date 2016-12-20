@@ -70,7 +70,8 @@ int handle_syscalls(pid_t child) {
 
     if(syscall != SC_EXECVE && first_rxp_mem == -1) {
         first_rxp_mem = get_readonly_mem(child);
-        for(int i = 0; i < 6; i++)
+        int i;
+        for(i = 0; i < 6; i++)
             write_slots[i] = first_rxp_mem + i*RDONLY_MEM_WRITE_SIZE;
     }
 

@@ -136,9 +136,10 @@ program but also protect your files and directories from modification.\n\n");
     int i;
     for(i = 0; i < help_list_count; i++) {
         fprintf(stdout, "  %s", help_list[i].arg);
-        for(int j = 0; j < help_list[i].num_vals; j++)
+        int j;
+        for(j = 0; j < help_list[i].num_vals; j++)
             fprintf(stdout, " ARG");
-        for(int j = 0; j < 15 - 4*help_list[i].num_vals; j++)
+        for(j = 0; j < 15 - 4*help_list[i].num_vals; j++)
             fprintf(stdout, " ");
         fprintf(stdout, "%s\n", help_list[i].desc);
     }

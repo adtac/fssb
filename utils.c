@@ -198,7 +198,8 @@ char *md5sum(char *str)
     unsigned char d[17];
     MD5(str, strlen(str), d);
 
-    for(int i = 0; i < 16; i++) {
+    int i;
+    for(i = 0; i < 16; i++) {
         unsigned char x = d[i] >> 4;
         if(x < 10)
             retval[2*i] = '0' + x;

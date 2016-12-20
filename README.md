@@ -120,7 +120,7 @@ Anyway, just before the syscall is executed, FSSB *switches* the string to
 something else - to a filename in the sandbox. And then lets the syscall go on.
 To the CPU, you basically asked to create a file in the sandbox. So it does.
 
-Then just after the sycall finishes (after the file is created), FSSB switches the
+Then just after the syscall finishes (after the file is created), FSSB switches the
 value to its original value. Now, syscalls are pretty low-level. And we're operating
 on either sides of a syscall - just before and after its execution. So the program
 has no way of knowing that the file was actually created in the sandbox. Every

@@ -27,6 +27,7 @@
 #define SC_EXECVE     59
 #define SC_EXIT       60
 #define SC_RENAME     82
+#define SC_CREAT      85
 #define SC_UNLINK     87
 #define SC_EXIT_GROUP 231
 #define SC_UNLINKAT   263

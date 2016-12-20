@@ -81,7 +81,7 @@ int handle_syscalls(pid_t child) {
         fprintf(stderr, "fssb: sandbox directory: %s\n", SANDBOX_DIR);
     }
 
-    if(syscall == SC_OPEN) {
+    if(syscall == SC_OPEN || syscall == SC_CREAT) {
         /* int open(const char *pathname, int flags); */
 
         long orig_word = get_syscall_arg(child, 0);

@@ -111,8 +111,8 @@ open("new_file", O_WRONLY|O_CREAT|O_TRUNC, 0666) = 3
 The first argument is the filename, the second are the flags, the third is
 the mode. To learn more about these, run `man -s 2 open`.
 
-Each syscall can have at most 6 arguments - these are basically six CPU registers.
-Each of these registers hold a value. In the above example, just before the
+Each syscall can have at most 6 arguments - these map to six CPU registers,
+each of which hold a value. In the above example, just before the
 `open` syscall is executed, the first register holds a memory address pointing
 to a string `"new_file"`.
 

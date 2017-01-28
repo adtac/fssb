@@ -21,6 +21,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/syscall.h>
 #include <assert.h>
 #include <fcntl.h>
 #include <sys/ptrace.h>
@@ -28,7 +29,6 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 
-#include "syscalls.h"
 #include "proxyfile.h"
 #include "arguments.h"
 #include "utils.h"
@@ -67,7 +67,7 @@ int handle_syscalls(pid_t child) {
 
     int syscall = get_reg(child, orig_eax);
 
-    if(syscall != SC_EXECVE && first_rxp_mem == -1) {
+    if(syscall != SYS_execve && first_rxp_mem == -1) {
         first_rxp_mem = get_readonly_mem(child);
         int i;
         for(i = 0; i < 6; i++)
@@ -75,15 +75,15 @@ int handle_syscalls(pid_t child) {
     }
 
     switch (syscall) {
-        case SC_EXIT:
-        case SC_EXIT_GROUP: {
+        case SYS_exit:
+		case SYS_exit_group: {
             int exit_code = get_syscall_arg(child, 0);
             fprintf(stderr, "fssb: child exited with %d\n", exit_code);
             fprintf(stderr, "fssb: sandbox directory: %s\n", SANDBOX_DIR);
             break;
         }
-        case SC_OPEN:
-        case SC_CREAT: {
+        case SYS_open:
+        case SYS_creat: {
             /* int open(const char *pathname, int flags); */
 
             long orig_word = get_syscall_arg(child, 0);
@@ -125,13 +125,13 @@ int handle_syscalls(pid_t child) {
             set_syscall_arg(child, 0, orig_word);
             break;
         }
-        case SC_UNLINK:
-        case SC_UNLINKAT: {
+        case SYS_unlink:
+        case SYS_unlinkat: {
             /* int unlink(const char *pathname); */
             /* int unlinkat(int dirfd, const char *pathname, int flags); */
 
             int swap_arg = 0;
-            if(syscall == SC_UNLINKAT)
+            if(syscall == SYS_unlinkat)
                 swap_arg = 1;
 
             long orig_word = get_syscall_arg(child, swap_arg);
@@ -171,7 +171,7 @@ int handle_syscalls(pid_t child) {
                 free(new_name);
             break;
         }
-        case SC_RENAME: {
+        case SYS_rename: {
             /* int rename(const char *oldpath, const char *newpath); */
 
             long orig_old_word = get_syscall_arg(child, 0),
@@ -208,9 +208,9 @@ int handle_syscalls(pid_t child) {
             free(new_new_name);
             break;
         }
-        case SC_STAT:
-        case SC_LSTAT:
-        case SC_ACCESS: {
+        case SYS_stat:
+        case SYS_lstat:
+        case SYS_access: {
             /* int stat(const char *pathname, struct stat *buf); */
             /* int lstat(const char *pathname, struct stat *buf); */
             /* int access(const char *pathname, int mode); */

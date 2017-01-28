@@ -65,8 +65,7 @@ int handle_syscalls(pid_t child) {
     if(syscall_breakpoint(child) != 0)
         return 0;
 
-    int syscall;
-    syscall = get_reg(child, orig_eax);
+    int syscall = get_reg(child, orig_eax);
 
     if(syscall != SC_EXECVE && first_rxp_mem == -1) {
         first_rxp_mem = get_readonly_mem(child);
@@ -75,158 +74,165 @@ int handle_syscalls(pid_t child) {
             write_slots[i] = first_rxp_mem + i*RDONLY_MEM_WRITE_SIZE;
     }
 
-    if(syscall == SC_EXIT || syscall == SC_EXIT_GROUP) {
-        int exit_code = get_syscall_arg(child, 0);
-        fprintf(stderr, "fssb: child exited with %d\n", exit_code);
-        fprintf(stderr, "fssb: sandbox directory: %s\n", SANDBOX_DIR);
-    }
-
-    if(syscall == SC_OPEN || syscall == SC_CREAT) {
-        /* int open(const char *pathname, int flags); */
-
-        long orig_word = get_syscall_arg(child, 0);
-        char *pathname = get_string(child, orig_word);
-
-        int flags = get_syscall_arg(child, 1);
-
-        proxyfile *cur;
-
-        if(flags & O_APPEND || flags & O_CREAT || flags & O_WRONLY) {
-            fprintf(debug_file, "open as write%s\n", pathname);
-            cur = search_proxyfile(list, pathname);
-            if(!cur)
-                cur = new_proxyfile(list, pathname);
-
-            write_string(child, write_slots[0], cur->proxy_path);
-            set_syscall_arg(child, 0, write_slots[0]);
+    switch (syscall) {
+        case SC_EXIT:
+        case SC_EXIT_GROUP: {
+            int exit_code = get_syscall_arg(child, 0);
+            fprintf(stderr, "fssb: child exited with %d\n", exit_code);
+            fprintf(stderr, "fssb: sandbox directory: %s\n", SANDBOX_DIR);
+            break;
         }
+        case SC_OPEN:
+        case SC_CREAT: {
+            /* int open(const char *pathname, int flags); */
 
-        if(flags == O_RDONLY) {
-            /* If this file has been written to, then we should hijack the arg
-               with the proxyfile because we want the process to see its own
-               changes.  If this file has never been opened with write
-               permissions, we can just give the same file (this is more
-               performant than copying the file). */
-            cur = search_proxyfile(list, pathname);
-            fprintf(debug_file, "open as read %s\n", pathname);
+            long orig_word = get_syscall_arg(child, 0);
+            char *pathname = get_string(child, orig_word);
 
-            if(cur) {
+            int flags = get_syscall_arg(child, 1);
+
+            proxyfile *cur;
+
+            if(flags & O_APPEND || flags & O_CREAT || flags & O_WRONLY) {
+                fprintf(debug_file, "open as write%s\n", pathname);
+                cur = search_proxyfile(list, pathname);
+                if(!cur)
+                    cur = new_proxyfile(list, pathname);
+
                 write_string(child, write_slots[0], cur->proxy_path);
                 set_syscall_arg(child, 0, write_slots[0]);
             }
+
+            if(flags == O_RDONLY) {
+                /* If this file has been written to, then we should hijack the arg
+                   with the proxyfile because we want the process to see its own
+                   changes.  If this file has never been opened with write
+                   permissions, we can just give the same file (this is more
+                   performant than copying the file). */
+                cur = search_proxyfile(list, pathname);
+                fprintf(debug_file, "open as read %s\n", pathname);
+
+                if(cur) {
+                    write_string(child, write_slots[0], cur->proxy_path);
+                    set_syscall_arg(child, 0, write_slots[0]);
+                }
+            }
+
+            int retval;
+            if(finish_and_return(child, syscall, &retval) == 0)
+                return 0;
+
+            set_syscall_arg(child, 0, orig_word);
+            break;
         }
+        case SC_UNLINK:
+        case SC_UNLINKAT: {
+            /* int unlink(const char *pathname); */
+            /* int unlinkat(int dirfd, const char *pathname, int flags); */
 
-        int retval;
-        if(finish_and_return(child, syscall, &retval) == 0)
-            return 0;
+            int swap_arg = 0;
+            if(syscall == SC_UNLINKAT)
+                swap_arg = 1;
 
-        set_syscall_arg(child, 0, orig_word);
-    }
+            long orig_word = get_syscall_arg(child, swap_arg);
+            char *pathname = get_string(child, orig_word);
 
-    if(syscall == SC_UNLINK || syscall == SC_UNLINKAT) {
-        /* int unlink(const char *pathname); */
-        /* int unlinkat(int dirfd, const char *pathname, int flags); */
+            fprintf(debug_file, "unlink %s\n", pathname);
 
-        int swap_arg = 0;
-        if(syscall == SC_UNLINKAT)
-            swap_arg = 1;
+            proxyfile *cur = search_proxyfile(list, pathname);
+            char *new_name;
 
-        long orig_word = get_syscall_arg(child, swap_arg);
-        char *pathname = get_string(child, orig_word);
+            if(cur) /* it's a file we've previously written to */
+                new_name = cur->proxy_path;
+            else {
+                new_name = proxy_path(SANDBOX_DIR, pathname);
 
-        fprintf(debug_file, "unlink %s\n", pathname);
+                struct stat sb;
+                if(!stat(pathname, &sb)) /* this file actually exists */
+                    fclose(fopen(new_name, "w"));
+                else /* this file doesn't exist; so let them try to remove it */
+                    new_name = pathname;
+            }
 
-        proxyfile *cur = search_proxyfile(list, pathname);
-        char *new_name;
+            if(new_name != pathname) {
+                write_string(child, write_slots[swap_arg], new_name);
+                set_syscall_arg(child, swap_arg, write_slots[swap_arg]);
+            }
 
-        if(cur) /* it's a file we've previously written to */
-            new_name = cur->proxy_path;
-        else {
-            new_name = proxy_path(SANDBOX_DIR, pathname);
+            int retval;
+            if(finish_and_return(child, syscall, &retval) == 0)
+                return 0;
 
-            struct stat sb;
-            if(!stat(pathname, &sb)) /* this file actually exists */
-                fclose(fopen(new_name, "w"));
-            else /* this file doesn't exist; so let them try to remove it */
-                new_name = pathname;
+            set_syscall_arg(child, swap_arg, orig_word);
+
+            if(cur) /* let's take this off our records */
+                delete_proxyfile(list, cur);
+            else /* we malloc'd some memory, let's free it */
+                free(new_name);
+            break;
         }
+        case SC_RENAME: {
+            /* int rename(const char *oldpath, const char *newpath); */
 
-        if(new_name != pathname) {
-            write_string(child, write_slots[swap_arg], new_name);
-            set_syscall_arg(child, swap_arg, write_slots[swap_arg]);
-        }
+            long orig_old_word = get_syscall_arg(child, 0),
+                 orig_new_word = get_syscall_arg(child, 1);
+            char *oldpath = get_string(child, orig_old_word),
+                 *newpath = get_string(child, orig_new_word);
 
-        int retval;
-        if(finish_and_return(child, syscall, &retval) == 0)
-            return 0;
+            fprintf(debug_file, "rename %s -> %s\n", oldpath, newpath);
 
-        set_syscall_arg(child, swap_arg, orig_word);
+            char *new_old_name = proxy_path(SANDBOX_DIR, oldpath),
+                 *new_new_name = proxy_path(SANDBOX_DIR, newpath);
 
-        if(cur) /* let's take this off our records */
-            delete_proxyfile(list, cur);
-        else /* we malloc'd some memory, let's free it */
-            free(new_name);
-    }
-
-    if(syscall == SC_RENAME) {
-        /* int rename(const char *oldpath, const char *newpath); */
-
-        long orig_old_word = get_syscall_arg(child, 0),
-             orig_new_word = get_syscall_arg(child, 1);
-        char *oldpath = get_string(child, orig_old_word),
-             *newpath = get_string(child, orig_new_word);
-
-        fprintf(debug_file, "rename %s -> %s\n", oldpath, newpath);
-
-        char *new_old_name = proxy_path(SANDBOX_DIR, oldpath),
-             *new_new_name = proxy_path(SANDBOX_DIR, newpath);
-
-        write_string(child, write_slots[0], new_old_name);
-        write_string(child, write_slots[1], new_new_name);
-        set_syscall_arg(child, 0, write_slots[0]);
-        set_syscall_arg(child, 1, write_slots[1]);
-
-        int retval;
-        if(finish_and_return(child, syscall, &retval) == 0)
-            return 0;
-
-        set_syscall_arg(child, 0, orig_old_word);
-        set_syscall_arg(child, 1, orig_new_word);
-
-        proxyfile *oldpf = search_proxyfile(list, oldpath);
-        if(oldpf) { /* nothing to do if this is an invalid rename */
-            delete_proxyfile(list, oldpf);
-
-            /* register the new file as a known file for future reads */
-            proxyfile *new = new_proxyfile(list, newpath);
-        }
-
-        free(new_old_name);
-        free(new_new_name);
-    }
-
-    if(syscall == SC_STAT || syscall == SC_LSTAT || syscall == SC_ACCESS) {
-        /* int stat(const char *pathname, struct stat *buf); */
-        /* int lstat(const char *pathname, struct stat *buf); */
-        /* int access(const char *pathname, int mode); */
-
-        long orig_word = get_syscall_arg(child, 0);
-        char *pathname = get_string(child, orig_word);
-
-        proxyfile *cur = search_proxyfile(list, pathname);
-
-        if(cur) { /* it's a file we've previously written to */
-            write_string(child, write_slots[0], cur->proxy_path);
+            write_string(child, write_slots[0], new_old_name);
+            write_string(child, write_slots[1], new_new_name);
             set_syscall_arg(child, 0, write_slots[0]);
+            set_syscall_arg(child, 1, write_slots[1]);
+
+            int retval;
+            if(finish_and_return(child, syscall, &retval) == 0)
+                return 0;
+
+            set_syscall_arg(child, 0, orig_old_word);
+            set_syscall_arg(child, 1, orig_new_word);
+
+            proxyfile *oldpf = search_proxyfile(list, oldpath);
+            if(oldpf) { /* nothing to do if this is an invalid rename */
+                delete_proxyfile(list, oldpf);
+
+                /* register the new file as a known file for future reads */
+                proxyfile *new = new_proxyfile(list, newpath);
+            }
+
+            free(new_old_name);
+            free(new_new_name);
+            break;
         }
+        case SC_STAT:
+        case SC_LSTAT:
+        case SC_ACCESS: {
+            /* int stat(const char *pathname, struct stat *buf); */
+            /* int lstat(const char *pathname, struct stat *buf); */
+            /* int access(const char *pathname, int mode); */
 
-        int retval;
-        if(finish_and_return(child, syscall, &retval) == 0)
-            return 0;
+            long orig_word = get_syscall_arg(child, 0);
+            char *pathname = get_string(child, orig_word);
 
-        set_syscall_arg(child, 0, orig_word);
+            proxyfile *cur = search_proxyfile(list, pathname);
+
+            if(cur) { /* it's a file we've previously written to */
+                write_string(child, write_slots[0], cur->proxy_path);
+                set_syscall_arg(child, 0, write_slots[0]);
+            }
+
+            int retval;
+            if(finish_and_return(child, syscall, &retval) == 0)
+                return 0;
+
+            set_syscall_arg(child, 0, orig_word);
+            break;
+        }
     }
-
     return 1;
 }
 

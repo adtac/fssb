@@ -2,3 +2,7 @@
 fssb
 test.c
 test
+
+
+# Jetbrains IDEs project directories
+.idea/

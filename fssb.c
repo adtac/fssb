@@ -76,7 +76,7 @@ int handle_syscalls(pid_t child) {
 
     switch (syscall) {
         case SYS_exit:
-		case SYS_exit_group: {
+        case SYS_exit_group: {
             int exit_code = get_syscall_arg(child, 0);
             fprintf(stderr, "fssb: child exited with %d\n", exit_code);
             fprintf(stderr, "fssb: sandbox directory: %s\n", SANDBOX_DIR);

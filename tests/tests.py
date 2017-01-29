@@ -24,7 +24,6 @@ from __future__ import print_function
 import os
 import sys
 import glob
-import shutil
 import inspect
 import hashlib
 import operator
@@ -47,7 +46,7 @@ def colored(color, msg):
 
 def sandbox_paths():
     sandbox_dirs = glob.glob('/tmp/fssb-*')
-    
+
     # sorting by number after 'fssb-'
     sandbox_dirs.sort(key=lambda d: int(d[d.rindex('-')+1:]), reverse=True)
 
@@ -92,32 +91,28 @@ def test_save_empty_file():
     hashed_name = hashlib.md5(empty_file_name).hexdigest()
 
     def test():
-        with open(empty_file_name, 'wb') as f:
+        with open(empty_file_name, 'wb'):
             pass
 
     def check_save_empty_file():
         sandbox_dir, filemap_path = sandbox_paths()
-        
+
         empty_file_path = os.path.join(sandbox_dir, hashed_name)
 
         # lets assume we made a bad testcase (or we've changed the fssb
         # to skip newline at the end of file-map file)
         ### saving, quiting
-        _assert(operator.eq, open(filemap_path).read(), '{} = {}\n'.format(empty_file_path, empty_file_name))
+        _assert(
+            operator.eq,
+            open(filemap_path).read(),
+            '{} = {}\n'.format(empty_file_path, empty_file_name)
+        )
         _assert(operator.eq, open(empty_file_path).read(), '')
 
     return test, check_save_empty_file
 
 
-if __name__ == '__main__':
-    if len(sys.argv) < 3:
-        self_name = sys.argv[0]
-
-        print('Usage: %s (test|check) <test_name>')
-        print('    test    - launches test phase for given test')
-        print('    check   - launches check&clean phase for given test')
-        sys.exit(-1)
-
+def main():
     phase = sys.argv[1]
     test_name = sys.argv[2]
 
@@ -128,7 +123,7 @@ if __name__ == '__main__':
         sys.exit(-1)
 
     test_function = globals()[test_name]
-    
+
     test_exec, test_check = test_function()
 
     print(colored(HEADER, 'Launching {} on {}'.format(phase, test_name)))
@@ -138,3 +133,13 @@ if __name__ == '__main__':
     else:
         test_check()
 
+
+
+if __name__ == '__main__':
+    if len(sys.argv) < 3:
+        print('Usage: %s (test|check) <test_name>' % sys.argv[0])
+        print('    test    - launches test phase for given test')
+        print('    check   - launches check&clean phase for given test')
+        sys.exit(-1)
+
+    main()
